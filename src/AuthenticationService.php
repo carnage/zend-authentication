@@ -9,6 +9,9 @@
 
 namespace Zend\Authentication;
 
+use Zend\Authentication\Event\Authenticate;
+use Zend\EventManager\EventManagerInterface;
+
 class AuthenticationService implements AuthenticationServiceInterface
 {
     /**
@@ -21,49 +24,25 @@ class AuthenticationService implements AuthenticationServiceInterface
     /**
      * Authentication adapter
      *
-     * @var Adapter\AdapterInterface
+     * @var EventManagerInterface
      */
-    protected $adapter = null;
+    protected $events;
 
     /**
      * Constructor
      *
-     * @param  Storage\StorageInterface $storage
-     * @param  Adapter\AdapterInterface $adapter
+     * @param EventManagerInterface $eventManager
+     * @param Storage\StorageInterface $storage
      */
-    public function __construct(Storage\StorageInterface $storage = null, Adapter\AdapterInterface $adapter = null)
+    public function __construct(EventManagerInterface $eventManager, Storage\StorageInterface $storage = null)
     {
         if (null !== $storage) {
             $this->setStorage($storage);
         }
-        if (null !== $adapter) {
-            $this->setAdapter($adapter);
-        }
+
+        $this->events = $eventManager;
     }
 
-    /**
-     * Returns the authentication adapter
-     *
-     * The adapter does not have a default if the storage adapter has not been set.
-     *
-     * @return Adapter\AdapterInterface|null
-     */
-    public function getAdapter()
-    {
-        return $this->adapter;
-    }
-
-    /**
-     * Sets the authentication adapter
-     *
-     * @param  Adapter\AdapterInterface $adapter
-     * @return AuthenticationService Provides a fluent interface
-     */
-    public function setAdapter(Adapter\AdapterInterface $adapter)
-    {
-        $this->adapter = $adapter;
-        return $this;
-    }
 
     /**
      * Returns the persistent storage handler
@@ -96,18 +75,19 @@ class AuthenticationService implements AuthenticationServiceInterface
     /**
      * Authenticates against the supplied adapter
      *
-     * @param  Adapter\AdapterInterface $adapter
+     * @TODO Authentication context needs working out -> should be a DTO or something
+     * @param array $authenticationContext
      * @return Result
-     * @throws Exception\RuntimeException
      */
-    public function authenticate(Adapter\AdapterInterface $adapter = null)
+    public function authenticate($authenticationContext = [])
     {
-        if (!$adapter) {
-            if (!$adapter = $this->getAdapter()) {
-                throw new Exception\RuntimeException('An adapter must be set or passed prior to calling authenticate()');
-            }
-        }
-        $result = $adapter->authenticate();
+        $event = new Authenticate();
+        $event->setTarget($this);
+        $event->setParams($authenticationContext);
+
+        $this->events->triggerEvent($event);
+
+        $result = $event->getResult();
 
         /**
          * ZF-7546 - prevent multiple successive calls from storing inconsistent results
