@@ -10,6 +10,8 @@
 namespace Zend\Authentication;
 
 use Zend\Authentication\Event\Authenticate;
+use Zend\Authentication\Event\AuthenticationFailed;
+use Zend\Authentication\Event\AuthenticationSucceeded;
 use Zend\EventManager\EventManagerInterface;
 
 class AuthenticationService implements AuthenticationServiceInterface
@@ -88,6 +90,18 @@ class AuthenticationService implements AuthenticationServiceInterface
         $this->events->triggerEvent($event);
 
         $result = $event->getResult();
+
+        if ($result->isValid()) {
+            $event = new AuthenticationSucceeded();
+        } else {
+            $event = new AuthenticationFailed();
+        }
+
+        $event->setTarget($this);
+        $event->setResult($result);
+        $event->setParams($authenticationContext);
+
+        $this->events->trigger($event);
 
         /**
          * ZF-7546 - prevent multiple successive calls from storing inconsistent results
