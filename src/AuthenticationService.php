@@ -117,9 +117,7 @@ class AuthenticationService implements AuthenticationServiceInterface
             $this->clearIdentity();
         }
 
-        if ($result->isValid()) {
-            $this->getStorage()->write($result->getIdentity());
-        }
+        $this->getStorage()->write($result);
 
         return $result;
     }
@@ -131,7 +129,7 @@ class AuthenticationService implements AuthenticationServiceInterface
      */
     public function hasIdentity()
     {
-        return !$this->getStorage()->isEmpty();
+        return !$this->getStorage()->isEmpty() && $this->getStorage()->read()->isValid();
     }
 
     /**
@@ -144,10 +142,14 @@ class AuthenticationService implements AuthenticationServiceInterface
         $storage = $this->getStorage();
 
         if ($storage->isEmpty()) {
-            return;
+            return null;
         }
 
-        return $storage->read();
+        $result = $storage->read();
+
+        if ($result->isValid()) {
+            return $result->getIdentity();
+        }
     }
 
     /**
