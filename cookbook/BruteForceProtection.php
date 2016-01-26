@@ -65,7 +65,7 @@ $callback = function ($identity, $credential) {
     throw new \Exception('Authentication failed');
 };
 
-$adapter = new \Zend\Authentication\Adapter\Callback();
+$adapter = new \Zend\Authentication\Adapter\Callback($callback);
 $listener = new \Zend\Authentication\Listener\LegacyAdapterListener($adapter);
 
 $events = new EventManager();
