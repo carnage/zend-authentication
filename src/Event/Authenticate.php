@@ -10,6 +10,8 @@ class Authenticate extends Event
 
     protected $result;
 
+    protected $previousResult;
+
     /**
      * @return mixed
      */
@@ -24,5 +26,21 @@ class Authenticate extends Event
     public function setResult($result)
     {
         $this->result = $result;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPreviousResult()
+    {
+        return $this->previousResult;
+    }
+
+    /**
+     * @param mixed $previousResult
+     */
+    public function setPreviousResult($previousResult)
+    {
+        $this->previousResult = $previousResult;
     }
 }

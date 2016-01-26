@@ -86,6 +86,7 @@ class AuthenticationService implements AuthenticationServiceInterface
         $event = new Authenticate();
         $event->setTarget($this);
         $event->setParams($authenticationContext);
+        $event->setPreviousResult($this->getResult());
 
         $this->events->triggerEvent($event);
 
@@ -133,17 +134,13 @@ class AuthenticationService implements AuthenticationServiceInterface
      */
     public function getIdentity()
     {
-        $storage = $this->getStorage();
+        $result = $this->getResult();
 
-        if ($storage->isEmpty()) {
-            return null;
-        }
-
-        $result = $storage->read();
-
-        if ($result->isValid()) {
+        if ($result !== null && $result->isValid()) {
             return $result->getIdentity();
         }
+
+        return null;
     }
 
     /**
@@ -154,5 +151,20 @@ class AuthenticationService implements AuthenticationServiceInterface
     public function clearIdentity()
     {
         $this->getStorage()->clear();
+    }
+
+    /**
+     * @return Result|null
+     */
+    private function getResult()
+    {
+        $storage = $this->getStorage();
+
+        if ($storage->isEmpty()) {
+            return null;
+        }
+
+        $result = $storage->read();
+        return $result;
     }
 }
