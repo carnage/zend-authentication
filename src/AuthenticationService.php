@@ -12,6 +12,8 @@ namespace Zend\Authentication;
 use Zend\Authentication\Event\Authenticate;
 use Zend\Authentication\Event\AuthenticationFailed;
 use Zend\Authentication\Event\AuthenticationSucceeded;
+use Zend\Authentication\Listener\AuthenticationAdapterListener;
+use Zend\EventManager\EventManager;
 use Zend\EventManager\EventManagerInterface;
 
 class AuthenticationService implements AuthenticationServiceInterface
@@ -36,13 +38,16 @@ class AuthenticationService implements AuthenticationServiceInterface
      * @param EventManagerInterface $eventManager
      * @param Storage\StorageInterface $storage
      */
-    public function __construct(EventManagerInterface $eventManager, Storage\StorageInterface $storage = null)
+    public function __construct(Storage\StorageInterface $storage = null, Adapter\AdapterInterface $adapter = null, $priority = 10)
     {
         if (null !== $storage) {
             $this->setStorage($storage);
         }
 
-        $this->events = $eventManager;
+        $this->events = new EventManager();
+        if ($adapter !== null) {
+            $this->addAdapter($adapter, $priority);
+        }
     }
 
 
@@ -77,7 +82,8 @@ class AuthenticationService implements AuthenticationServiceInterface
     /**
      * Authenticates against the supplied adapter
      *
-     * @TODO Authentication context needs working out -> should be a DTO or something
+     * @? This is currently a BC break the original takes an auth adapter as a parameter. This still conforms to the interface though.
+     *
      * @param array $authenticationContext
      * @return Result
      */
@@ -151,6 +157,28 @@ class AuthenticationService implements AuthenticationServiceInterface
     public function clearIdentity()
     {
         $this->getStorage()->clear();
+    }
+
+    /**
+     * @param Adapter\AdapterInterface $adapter
+     * @param int $priority
+     */
+    public function addAdapter(Adapter\AdapterInterface $adapter, $priority = 10)
+    {
+        $listener = new AuthenticationAdapterListener($adapter);
+        $this->events->attach('Authenticate', [$listener, 'onAuthenticate'], $priority);
+    }
+
+    /**
+     * @? Should there be a separate method for each event type instead of passing the event as a string?
+     *
+     * @param $event
+     * @param callable $listener
+     * @param $priority
+     */
+    public function addListener($event, callable $listener, $priority)
+    {
+        $this->events->attach($event, $listener, $priority);
     }
 
     /**

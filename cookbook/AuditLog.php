@@ -36,13 +36,8 @@ $callback = function ($identity, $credential) {
 };
 
 $adapter = new \Zend\Authentication\Adapter\Callback($callback);
-$listener = new \Zend\Authentication\Listener\LegacyAdapterListener($adapter);
 
-$events = new EventManager();
-$events->attach('Authenticate', [$firewall, 'onAuthenticate'] , -1);
-$events->attach('Authenticate', [$listener, 'onAuthenticate'], 10);
-$events->attach('AuthenticationFailed', [$auditLog, 'onAuthenticationFailed'] , -1);
-
-$authService = new AuthenticationService($events);
+$authService = new AuthenticationService(null, $adapter);
+$authService->addListener('AuthenticationFailed', [$auditLog, 'onAuthenticationFailed'] , -1);
 
 $authService->authenticate(['ip' => '127.0.0.1', 'identity' => 'test', 'credential' => 'failed']);

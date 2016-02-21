@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * I've left this in as a demonstration of a possible solution, however I think the complexities of 2fa should be
+ * considered separately - possibly even in it's own (zend-2fa) module.
+ */
+
+
 use Zend\Authentication\AuthenticationService;
 use Zend\EventManager\EventManager;
 
@@ -57,13 +63,9 @@ $callback = function ($identity, $credential) {
 };
 
 $adapter = new \Zend\Authentication\Adapter\Callback($callback);
-$listener = new \Zend\Authentication\Listener\LegacyAdapterListener($adapter);
 
-$events = new EventManager();
-$events->attach('Authenticate', [$listener, 'onAuthenticate'], 10);
-$events->attach('Authenticate', [$TwoFAlistener, 'onAuthenticate'], 20);
-
-$authService = new AuthenticationService($events);
+$authService = new AuthenticationService(null, $adapter);
+$authService->addListener('Authenticate', [$TwoFAlistener, 'onAuthenticate'], 20);
 
 $authService->authenticate(['identity' => 'test', 'credential' => 'test']);
 

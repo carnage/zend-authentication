@@ -7,7 +7,7 @@ use Zend\Authentication\Adapter\ValidatableAdapterInterface;
 use Zend\Authentication\Event\Authenticate;
 use Zend\Authentication\Result;
 
-class LegacyAdapterListener
+class AuthenticationAdapterListener
 {
     /**
      * @var AdapterInterface
@@ -15,7 +15,7 @@ class LegacyAdapterListener
     private $adapter;
 
     /**
-     * LegacyAdapterListener constructor.
+     * AuthenticationAdapterListener constructor.
      * @param AdapterInterface $adapter
      */
     public function __construct(AdapterInterface $adapter)

@@ -12,7 +12,6 @@ $callback = function ($identity, $credential) {
 };
 
 $adapter = new \Zend\Authentication\Adapter\Callback($callback);
-$listener = new \Zend\Authentication\Listener\LegacyAdapterListener($adapter);
 
 $callback2 = function ($identity, $credential) {
     if ($identity === 'test' && $credential === 'tester') {
@@ -23,13 +22,9 @@ $callback2 = function ($identity, $credential) {
 };
 
 $adapter2 = new \Zend\Authentication\Adapter\Callback($callback2);
-$listener2 = new \Zend\Authentication\Listener\LegacyAdapterListener($adapter2);
 
-$events = new EventManager();
-$events->attach('Authenticate', [$listener, 'onAuthenticate'], 10);
-$events->attach('Authenticate', [$listener2, 'onAuthenticate'], 20);
-
-$authService = new AuthenticationService($events);
+$authService = new AuthenticationService(null, $adapter, 10);
+$authService->addAdapter($adapter2, 20);
 
 //auths against adapter 1
 $authService->authenticate(['identity' => 'test', 'credential' => 'test']);
